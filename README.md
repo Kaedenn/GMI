@@ -5,6 +5,18 @@ Interactive program for performing left/right discrimination treatments for grad
 
 ```python main.py [options]```
 
+```
+optional arguments:
+  -h, --help            show this help message and exit
+  -p [PATHS [PATHS ...]], --paths [PATHS [PATHS ...]]
+                        load images from PATHS (default: ./assets/*)
+  -o PATH, --out PATH   file to record outputs to
+  -c NUM, --count NUM   limit number of images to NUM (default 30)
+  --repeats             allow repeats
+  --analyze FILE        analyze FILE and exit
+  -v, --verbose         be verbose about operations performed
+```
+
 ## Assets
 Assets are stored in directories
     ```assets/hands/left```, ```assets/hands/right```, ```assets/feet/left```, and ```assets/feet/right```
