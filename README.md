@@ -9,6 +9,5 @@ Any directories not existing are created on first run, and all common image form
 ## Assets provided
 Sample assets are provided from the following resources:
 
-assets/feet/right/free_shoe1.png
-    https://www.pexels.com/photo/foot-brown-shoe-2491/
+```assets/feet/right/free_shoe1.png``` from ```https://www.pexels.com/photo/foot-brown-shoe-2491/```
     scaled to 800 pixels wide
