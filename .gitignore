@@ -1,8 +1,10 @@
 # Copyrighted or unlicensed assets
-assets/hands/left/*
-assets/hands/right/*
-assets/feet/left/*
-assets/feet/right/*
+*.png
+*.jpg
+*.jpeg
+
+# vim cache files
+*.swp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
