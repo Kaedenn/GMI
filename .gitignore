@@ -1,3 +1,9 @@
+# Copyrighted or unlicensed assets
+assets/hands/left/*
+assets/hands/right/*
+assets/feet/left/*
+assets/feet/right/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
