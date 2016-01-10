@@ -2,6 +2,7 @@
 *.png
 *.jpg
 *.jpeg
+!**/free_*png
 
 # vim cache files
 *.swp

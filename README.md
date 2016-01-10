@@ -3,4 +3,7 @@ Interactive program for performing left/right discrimination treatments for grad
 
 ## Assets
 Assets are stored in directories
-    ```./assets/hands/left```, ```assets/hands/right```
+    ```assets/hands/left```, ```assets/hands/right```, ```assets/feet/left```, and ```assets/feet/right```
+Any directories not existing are created on first run, and all common image formats are supported, including PNG and JPEG.
+
+:
