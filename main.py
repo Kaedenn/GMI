@@ -42,14 +42,17 @@ pygame.font.init()
 
 SELF_PATH = os.path.dirname(sys.argv[0])
 ASSETS_PATH = os.path.join(SELF_PATH, "assets")
-
 ASSETS_HANDS = os.path.join(ASSETS_PATH, "hands")
 ASSETS_LHAND = os.path.join(ASSETS_HANDS, "left")
 ASSETS_RHAND = os.path.join(ASSETS_HANDS, "right")
-
 ASSETS_FEET = os.path.join(ASSETS_PATH, "feet")
 ASSETS_LFOOT = os.path.join(ASSETS_FEET, "left")
 ASSETS_RFOOT = os.path.join(ASSETS_FEET, "right")
+ASSET_DIRS = (ASSETS_LHAND, ASSETS_RHAND, ASSETS_LFOOT, ASSETS_RFOOT)
+
+for dir in ASSET_DIRS:
+    if not os.path.exists(dir):
+        os.makedirs(dir)
 
 def image_type(path):
     real = os.path.realpath(path)
