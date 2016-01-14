@@ -37,6 +37,8 @@ import time
 import pygame
 import pygame.locals as pyl
 
+from interface import Interface
+
 pygame.init()
 pygame.font.init()
 
@@ -150,108 +152,6 @@ class ImageProvider(object):
                          self._count * 100 / self._total)
         return img
 
-class ImageDisplay(object):
-    def __init__(self, provider, mode=(800, 600)):
-        self._extents = mode
-        self._surf = pygame.display.set_mode(mode)
-        self._provider = provider
-        self._start_time = 0
-        self._stop_time = 0
-        self._curr = None
-        self._curr_hash = None
-        self._curr_start = None
-        self._running = False
-        self._image_times = {}
-        self._images_correct = {}
-        self._text('Press spacebar to begin (and ESC to end early)')
-
-    def verbose(self, msg, *args):
-        self._provider.verbose(msg, *args)
-
-    def _text(self, text):
-        font = pygame.font.Font(pygame.font.match_font('Helvetica'), 24)
-        surf = font.render(text, False, (255,255,255))
-        self._draw_surf(surf)
-
-    def _draw(self, path):
-        surf = pygame.image.load(path)
-        w, h = surf.get_width(), surf.get_height()
-        if w > self._extents[0] or h > self._extents[1]:
-            surf = self._scale_surface(surf)
-        self._draw_surf(surf)
-
-    def _draw_surf(self, surf, at=None):
-        if at is None:
-            w, h = surf.get_width(), surf.get_height()
-            left = (self._extents[0] - w) / 2
-            top = (self._extents[1] - h) / 2
-        else:
-            left, top = at
-        self._surf.fill((0, 0, 0))
-        self._surf.blit(surf, (left, top))
-        pygame.display.flip()
-
-    def _scale_surface(self, surf):
-        w_ratio = surf.get_width() * 1.0 / self._extents[0]
-        h_ratio = surf.get_height() * 1.0 / self._extents[1]
-        new_w = int(surf.get_width() / max(w_ratio, h_ratio))
-        new_h = int(surf.get_height() / max(w_ratio, h_ratio))
-        return pygame.transform.scale(surf, (new_w, new_h))
-
-    def running(self):
-        return self._running
-
-    def elapsed(self):
-        if self._stop_time == 0:
-            return time.time() - self._start_time
-        return self._stop_time - self._start_time
-
-    def start(self):
-        self._running = True
-        self._provider.restart()
-        self._start_time = time.time()
-        self._curr = self._provider.next()
-        self._curr_hash = self._provider.hash(self._curr)
-        self._curr_start = time.time()
-        self._draw(self._curr)
-
-    def end(self):
-        now = time.time()
-        if self._curr is not None:
-            self._image_times[self._curr_hash] = now - self._curr_start
-        self._running = False
-        self._curr = None
-        self._curr_hash = None
-        self._curr_start = None
-        self._stop_time = now
-
-    def get_results(self):
-        count = self._provider.count()
-        results = {}
-        for img in self._images_correct:
-            results[img] = (self._image_times[img], self._images_correct[img])
-        return results
-
-    def get_dir(self):
-        return "left" if "left" in self._curr else "right"
-
-    def do_guess(self, direction):
-        self._image_times[self._curr_hash] = time.time() - self._curr_start
-        correct = self.get_dir() == direction
-        if correct:
-            print("Correct!")
-        else:
-            print("Wrong! It's a %s image" % (self.get_dir(),))
-        self._images_correct[self._curr_hash] = correct
-        try:
-            self._curr = self._provider.next()
-            self._curr_hash = self._provider.hash(self._curr)
-            self._curr_start = time.time()
-            self._image_times[self._curr_hash] = 0
-            self._draw(self._curr)
-        except StopIteration as _:
-            self.end()
-
 def do_analysis(args):
     batches = []
     for line in csv.reader(open(args.analyze)):
@@ -260,36 +160,51 @@ def do_analysis(args):
         else:
             pass
 
+def do_key_event(interface, provider, started):
+    finished = False
+    keys = pygame.key.get_pressed()
+    if keys[pyl.K_SPACE] and not interface.running():
+        started = True
+        interface.start()
+    elif keys[pyl.K_LEFT] or keys[pyl.K_RIGHT]:
+        if interface.running():
+            d = key2dir(keys[pyl.K_LEFT], keys[pyl.K_RIGHT])
+            if d is not None:
+                interface.do_guess(d)
+        elif started:
+            finished = True
+    return started, finished
+
 def do_interactive(args):
     provider = ImageProvider(args.paths, count=args.count,
                              repeats=args.repeats, verbose=args.verbose)
-    disp = ImageDisplay(provider)
+    interface = Interface(provider)
     finished = False
     started = False
 
-    key2dir = lambda l, r: "left" if l else "right"
+    """
+    pain_level = None
+    while pain_level is None:
+        interface.text("What is your current pain level, between 0 and 10?")
+        for event in pygame.event.get():
+            if event.type == pyl.QUIT:
+                raise SystemExit(0)
+            elif event.type == pyl.KEYDOWN:
+                pass
+
+    print("Current pain level: %d" % (pain_level,))
+    """
 
     while not finished:
-        keystate = pygame.key.get_pressed()
-        if started and not disp.running():
-            finished = True
-            break
         for event in pygame.event.get():
-            if event.type == pyl.QUIT or keystate[pyl.K_ESCAPE]:
-                disp.end()
-                finished = True
-            elif keystate[pyl.K_SPACE] and not disp.running():
-                started = True
-                disp.start()
-            elif keystate[pyl.K_LEFT] or keystate[pyl.K_RIGHT]:
-                if disp.running():
-                    d = key2dir(keystate[pyl.K_LEFT], keystate[pyl.K_RIGHT])
-                    disp.do_guess(d)
-                elif started:
-                    finished = True
+            interface.on_event(event)
+        if interface.running():
+            started = True
+        elif started or interface.ended():
+            finished = True
 
     log = [('Batch', time.time(), args.repeats, args.count, args.paths)]
-    results = disp.get_results()
+    results = interface.get_results()
     for img,result in results.iteritems():
         sec, correct = result
         log.append((img, provider.lookup(img), correct, sec))
@@ -324,3 +239,5 @@ def main():
 if __name__ == "__main__":
     main()
 
+# TODO: swap out interface.py with pyg.py
+# TODO: add proper "current pain level" prompt

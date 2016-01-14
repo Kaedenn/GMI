@@ -37,3 +37,6 @@ Sample assets are provided from the following resources:
 Work in progress
 
 Use ```--out <PATH>``` to append results to the file designated by <PATH> in CSV format. Using ```--analyze <FILE>``` to analyze the file and get statistical information about it.
+
+## References
+
