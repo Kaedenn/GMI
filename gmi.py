@@ -28,7 +28,7 @@ ASSET_SIDES = ("left", "right")
 def make_asset_dirs():
     for k in ASSET_KINDS:
         for s in ASSET_SIDES:
-            d = os.path.join(SELF_PATH, k, s)
+            d = os.path.join(ASSETS_PATH, k, s)
             if not os.path.exists(d):
                 os.makedirs(d)
 
