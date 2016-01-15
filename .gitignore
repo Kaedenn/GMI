@@ -4,6 +4,9 @@
 *.jpeg
 !**/free_*
 
+# Default logging file
+log.txt
+
 # vim cache files
 *.swp
 
