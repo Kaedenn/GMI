@@ -202,16 +202,10 @@ def main():
                    help="file to record outputs to")
     p.add_argument("-c", "--count", type=int, metavar="NUM", default=30,
                    help="limit number of images to NUM (default 30)")
-    p.add_argument("--analyze", type=str, metavar="FILE",
-                   help="analyze FILE and exit")
     p.add_argument("-v", "--verbose", action="store_true",
                    help="be verbose about operations performed")
 
     args = p.parse_args()
-
-    if args.analyze:
-        analysis.analyze(args.analyze)
-        raise SystemExit(0)
 
     w, h = args.size.split(',')
     g = pyg.PyGame(mode=(int(w), int(h)), verbose=args.verbose)
