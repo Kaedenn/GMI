@@ -34,12 +34,33 @@ optional arguments:
 
 ## Assets
 Assets are stored in directories
-    ```assets/hands/left```, ```assets/hands/right```, ```assets/feet/left```, and ```assets/feet/right```
+    ```
+    assets/hands/left
+    ```
+    ,
+    ```
+    assets/hands/right
+    ```
+    ,
+    ```
+    assets/feet/left
+    ```
+    , and
+    ```
+    assets/feet/right
+    ```
 Any directories not existing are created on first run, and all common image formats are supported, including PNG and JPEG.
 
 The folder structure is incredibly important. Images MUST be in one of the four directories above. Classifications are either ```hands``` or ```feet```, and the direction must be either ```left``` or ```right```.
 
-All of this information is used for the statistical analysis part of the application (a work in progress)
+All of this information is used for the statistical analysis part of the application
+
+## Analysis
+Using
+```
+analysis.py
+```
+useful results can be deduced from the main program's output log.
 
 ## Assets provided
 Sample assets are provided from the following resources:
