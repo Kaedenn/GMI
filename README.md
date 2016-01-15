@@ -3,18 +3,33 @@ Interactive program for performing left/right discrimination treatments for grad
 
 ## Usage
 
-```python main.py [options]```
+```
+python gmi.py [options]
+```
 
 ```
 optional arguments:
   -h, --help            show this help message and exit
-  -p [PATHS [PATHS ...]], --paths [PATHS [PATHS ...]]
-                        load images from PATHS (default: ./assets/*)
+  --size W,H            screen size of the form W,H (default: 800,600)
+  --limit CHOICE        limit to either 'hands' or 'feet' (default None)
   -o PATH, --out PATH   file to record outputs to
   -c NUM, --count NUM   limit number of images to NUM (default 30)
-  --repeats             allow repeats
-  --analyze FILE        analyze FILE and exit
   -v, --verbose         be verbose about operations performed
+```
+
+```
+python analysis.py [options] <file>
+```
+
+```
+positional arguments:
+  file                 file to analyze
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --csv FILE           write summary CSV to FILE
+  -a, --append         append to CSV file; do not overwrite
+  --detailed-csv FILE  write each test to N_FILE, N = 1, 2, 3, ...
 ```
 
 ## Assets
