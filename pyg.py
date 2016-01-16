@@ -6,6 +6,12 @@ import sys
 import pygame
 import pygame.locals as pyl
 
+T_COLOR = '\033[%sm'
+F_COLOR = lambda *v: T_COLOR % (';'.join(str(i) for i in v),)
+TC_BOLD = 1
+TC_RED = 31
+TC_NONE = 0
+
 C_WHITE = (255, 255, 255)
 C_BLACK = (0, 0, 0)
 

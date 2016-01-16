@@ -14,8 +14,22 @@ import analysis
 import pygame
 import pygame.locals as pyl
 
+def _should_color():
+    return all((
+        any((os.environ.get('TERM', None) == 'xterm',
+             'LS_COLORS' in os.environ)),
+        'GMI_NOCOLOR' not in os.environ))
+_ERROR = pyg.F_COLOR(pyg.TC_BOLD, pyg.TC_RED) if _should_color() else ''
+_BOLD = pyg.F_COLOR(pyg.TC_BOLD) if _should_color() else ''
+_RED = pyg.F_COLOR(pyg.TC_RED) if _should_color() else ''
+_END = pyg.F_COLOR(pyg.TC_NONE) if _should_color() else ''
+
+ASSETS_ENV = 'GMI_ASSETS_PATH'
+
+SELF = os.path.basename(sys.argv[0])
 SELF_PATH = os.path.dirname(sys.argv[0])
-ASSETS_PATH = os.path.join(SELF_PATH, "assets")
+ASSETS_PATH_DEFAULT = os.path.join(SELF_PATH, "assets")
+ASSETS_PATH = os.environ.get(ASSETS_ENV, ASSETS_PATH_DEFAULT)
 ASSETS_HANDS = os.path.join(ASSETS_PATH, "hands")
 ASSETS_LHAND = os.path.join(ASSETS_HANDS, "left")
 ASSETS_RHAND = os.path.join(ASSETS_HANDS, "right")
@@ -24,6 +38,26 @@ ASSETS_LFOOT = os.path.join(ASSETS_FEET, "left")
 ASSETS_RFOOT = os.path.join(ASSETS_FEET, "right")
 ASSET_KINDS = ("hands", "feet")
 ASSET_SIDES = ("left", "right")
+
+ASSETS_ERROR_MESSAGE = """\
+%(error)sERROR!!!%(end)s%(bold)s
+No assets found. Either add assets to %(assets)s/ or set the environment
+variable %(env)s to an assets folder before using %(self)s%(end)s
+
+Example:
+    %(env)s=%(default)s python %(self)s %(args)s
+
+%(bold)sNothing found in folders
+    %(lh)s
+    %(rh)s
+    %(lf)s
+    %(rf)s%(end)s
+
+Exiting \
+""" % dict(assets=ASSETS_PATH, env=ASSETS_ENV, self=SELF,
+           default=ASSETS_PATH_DEFAULT, args=' '.join(sys.argv[1:]),
+           lh=ASSETS_LHAND, rh=ASSETS_RHAND, lf=ASSETS_LFOOT, rf=ASSETS_RFOOT,
+           error=_ERROR, end=_END, bold=_BOLD)
 
 def make_asset_dirs():
     for k in ASSET_KINDS:
@@ -115,6 +149,9 @@ class GMITest(object):
             for side, seq in lr.items():
                 self._working_assets.extend(seq)
 
+        if len(self._working_assets) == 0:
+            print(ASSETS_ERROR_MESSAGE)
+            raise RuntimeError("No assets found. Please add assets to use")
         rand_resize_list(self._working_assets, self._num_images)
 
         # prepare unseen list
@@ -193,7 +230,12 @@ class GMITest(object):
         }
 
 def main():
-    p = argparse.ArgumentParser(usage="%(prog)s [options]")
+    p = argparse.ArgumentParser(usage="%(prog)s [options]", epilog="""
+
+environment variables:
+  GMI_NOCOLOR           if set, console errors will have no extra formatting
+  GMI_ASSETS_PATH       path to assets folder (default: ./assets)
+""", formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--size", type=str, metavar="W,H", default="800,600",
                    help="screen size of the form W,H (default: 800,600)")
     p.add_argument("--limit", choices=('hands', 'feet'), default=None,
@@ -206,6 +248,14 @@ def main():
                    help="be verbose about operations performed")
 
     args = p.parse_args()
+
+    num_files = 0
+    for k in ASSET_KINDS:
+        for s in ASSET_SIDES:
+            num_files += len(os.listdir(os.path.join(ASSETS_PATH, k, s)))
+    if num_files == 0:
+        print(ASSETS_ERROR_MESSAGE)
+        raise SystemExit(1)
 
     w, h = args.size.split(',')
     g = pyg.PyGame(mode=(int(w), int(h)), verbose=args.verbose)
@@ -251,9 +301,12 @@ Press space to start.""" % (pain_level,))
         return
 
     # 3) perform test
-    test = GMITest(pain_level, limit_to='feet', verbose=args.verbose)
-    test.next()
-    g.data_set(test)
+    try:
+        g.data_set(GMITest(pain_level, limit_to='feet', verbose=args.verbose))
+    except ValueError as e:
+        raise
+    test = g.data_get()
+    g.data_get().next()
     def on_keydown_step3(gobj, event):
         if event.key == pyl.K_a or event.key == pyl.K_LEFT:
             gobj.data_get().do_guess("left")
