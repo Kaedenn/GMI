@@ -6,14 +6,40 @@ import sys
 import pygame
 import pygame.locals as pyl
 
+# Console constants for printing in color
 T_COLOR = '\033[%sm'
 F_COLOR = lambda *v: T_COLOR % (';'.join(str(i) for i in v),)
 TC_BOLD = 1
 TC_RED = 31
 TC_NONE = 0
 
+# Color constants
 C_WHITE = (255, 255, 255)
 C_BLACK = (0, 0, 0)
+
+def rgb_hex(hexstr):
+    if len(hexstr) == 0 or hexstr[0] != '#':
+        raise ValueError("Color '%r' must begin with a #" % (hexstr,))
+    piece_len = (len(hexstr)-1) / 3
+    hexcolor = hexstr[1:]
+    red = hexcolor[0:piece_len]
+    green = hexcolor[piece_len:piece_len*2]
+    blue = hexcolor[piece_len*2:]
+    return rgb(int(red, 16), int(green, 16), int(blue, 16))
+
+def rgb(*args):
+    if len(args) in (3, 4):
+        return args[:3] # discard alpha
+    if len(args) == 1:
+        if isinstance(args[0], basestring):
+            if len(args[0]) > 1 and args[0][0] == '#':
+                return rgb_hex(args[0])
+        else:
+            try:
+                return rgb_hex("#%06x" % (hex(args[0]),))
+            except TypeError as e:
+                pass
+    raise ValueError("unable to parse %s as rgb" % (args,))
 
 def _dict_pop(d, k, *args):
     if k not in d:
@@ -27,16 +53,19 @@ def _dict_pop(d, k, *args):
 
 class PyGame(object):
     def __init__(self, mode=(800,600), text_color=C_WHITE, bg_color=C_BLACK,
-                 verbose=False):
+                 verbose=False, fps=30):
         if not pygame.display.get_init():
             pygame.init()
             pygame.display.init()
             pygame.font.init()
+
         self._extents = mode
         self._surf = pygame.display.set_mode(mode)
         self._clock = pygame.time.Clock()
         self._text_color = text_color
         self._bg_color = bg_color
+        self._fps = fps
+
         self._drawing = False
         self._active = True
         self._bindings = {None: []}
@@ -116,15 +145,12 @@ class PyGame(object):
     def text(self, text, at=None, font="Helvetica", size=24, **kwargs):
         """text(text, at=None, font="Helvetica", size=24)
         
-        Render `text` with the given `font` and `size` (in points). Contrary
-        to the traditional meaning, `leading` refers to additional pixels
-        between lines, rather than in points or EM.
+        Render `text` with the given `font` and `size` (in points).
 
         text:       the text message to draw, allowing newlines
         at:         where to anchor the text (centered on-screen if None)
         font:       the font to use
         size:       the size to use in points
-        leading:    number of pixels between subsequent lines of text
 
         Supported keyword arguments:
 
@@ -253,7 +279,11 @@ class PyGame(object):
         "call to invoke the main loop until the program ends"
         while self.active():
             self.run_once()
-            self._clock.tick(30)
+            self._clock.tick(self._fps)
+
+    def tick(self):
+        "sleeps the program as long as necessary to ensure an FPS limit"
+        self._clock.tick(self._fps)
 
     def run_once(self, render=False):
         "call to run one iteration of the main loop"
@@ -270,6 +300,7 @@ class PyGame(object):
             self.render_end()
 
 if __name__ == "__main__":
+    # for testing
     import argparse
     p = argparse.ArgumentParser()
     p.add_argument("--mode", type=str, default="800,600",
